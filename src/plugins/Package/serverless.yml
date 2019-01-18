@@ -1,0 +1,16 @@
+name: Package
+extends: Plugin
+main: ./index.js
+
+version: 1.0.0
+description: Plugin that provides the package command
+
+command: "package"
+options:
+  path:
+    option: "-p, --path [path]"
+    description: "The path to the target directory"
+  stage:
+    option: "-s, --stage [stage]"
+    description: "Set the stage"
+    default: "prod"

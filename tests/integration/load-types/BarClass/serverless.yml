@@ -1,0 +1,10 @@
+extends: ../FooClass
+name: BarClass
+main: ./index.js
+
+
+inputTypes:
+  bar:
+    type: string
+
+bar: ${inputs.bar}

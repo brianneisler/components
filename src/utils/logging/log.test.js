@@ -1,6 +1,6 @@
-const log = require('./log')
+import log from './log'
 
-const logSpy = jest.spyOn(process.stdout, 'write')
+jest.spyOn(global.console, 'log')
 
 afterAll(() => {
   jest.resetAllMocks()
@@ -15,14 +15,14 @@ describe('#log()', () => {
     delete process.env.CI
   })
 
-  it('should write message to stdout', () => {
-    log(msg)
-    expect(logSpy).toHaveBeenCalledWith(`${msg}\n`)
+  it('should log message using console.log (node 6 and <= 8.9 support)', () => {
+    log(undefined, msg)
+    expect(global.console.log).toHaveBeenCalledWith(msg)
   })
 
-  it('should not write message to stdout if CI env var is set', () => {
+  it('should not write message to log if CI env var is set', () => {
     process.env.CI = true
-    log(msg)
-    expect(logSpy).not.toHaveBeenCalled()
+    log(undefined, msg)
+    expect(global.console.log).not.toHaveBeenCalled()
   })
 })

@@ -1,0 +1,15 @@
+name: App
+extends: Component
+version: 0.3.0
+main: ./dist/index.js
+
+providers: ${inputs.providers}
+services: ${inputs.services}
+
+inputTypes:
+  providers:
+    type: object
+    required: false
+  services:
+    type: object
+    required: false

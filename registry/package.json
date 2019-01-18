@@ -3,17 +3,31 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest .",
     "postinstall": "node postinstall.js"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.3",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-preset-env": "^1.7.0"
+    "@babel/cli": "^7.1.0",
+    "@babel/core": "^7.1.0",
+    "@babel/node": "^7.0.0",
+    "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
+    "@babel/preset-env": "^7.1.0",
+    "@babel/register": "^7.0.0",
+    "babel-core": "^7.0.0-bridge.0",
+    "babel-eslint": "^10.0.1",
+    "babel-jest": "^23.6.0",
+    "eslint": "^5.8.0",
+    "eslint-config-prettier": "^3.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-prettier": "^3.0.0",
+    "jest": "^23.6.0",
+    "lint-staged": "^8.0.3",
+    "markdown-magic": "^0.1.25",
+    "pre-commit": "^1.2.2",
+    "prettier": "^1.14.3"
   },
   "dependencies": {
-    "bluebird": "^3.5.1",
-    "ramda": "^0.25.0"
+    "@serverless/utils": "0.0.19",
+    "bluebird": "^3.5.1"
   }
 }

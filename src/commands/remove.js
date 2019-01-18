@@ -1,7 +1,10 @@
-const run = require('../run')
+import { createContext } from '../utils'
+import run from '../run'
 
-async function remove(options) {
-  return run('remove', options)
+const remove = async (options) => {
+  let context = await createContext(options)
+  context = await context.loadPlugins()
+  return run('remove', context)
 }
 
-module.exports = remove
+export default remove

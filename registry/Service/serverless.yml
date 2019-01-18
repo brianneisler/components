@@ -1,0 +1,19 @@
+name: Service
+extends: Component
+main: ./dist/index.js
+version: 0.3.0
+
+providers: ${inputs.providers}
+compute: ${inputs.compute}
+functions: ${inputs.functions}
+
+inputTypes:
+  providers:
+    type: Object
+    required: false
+  compute:
+    type: Object
+    required: false
+  functions:
+    type: Object
+    required: false

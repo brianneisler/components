@@ -1,152 +1,265 @@
-const { union, keys, map } = require('ramda')
-const buildGraph = require('./buildGraph')
+import { resolveComponentEvaluables } from '../component'
+import { deserialize, serialize } from '../serialize'
+import { createTestContext } from '../../../test'
+import buildGraph from './buildGraph'
+import { SYMBOL_STATE } from '../constants'
+
+beforeEach(async () => {
+  jest.clearAllMocks()
+})
+
+afterAll(() => {
+  jest.restoreAllMocks()
+})
 
 describe('#buildGraph()', () => {
-  const componentsToUse = {
-    apiGateway: {
-      id: 'myApiGateway',
-      type: 'gateway',
-      inputs: {
-        method: 'POST',
-        path: 'my-path'
-      },
-      outputs: {},
-      state: {},
-      dependencies: ['role', 'func'],
-      fns: {
-        deploy: () => {},
-        remove: () => {}
-      }
-    },
-    func: {
-      id: 'myFunc',
-      type: 'function',
-      inputs: {
-        memorySize: 512,
-        timeout: 60
-      },
-      outputs: {},
-      state: {},
-      dependencies: ['role'],
-      fns: {
-        deploy: () => {},
-        remove: () => {},
-        invoke: () => {}
-      }
-    },
-    role: {
-      id: 'myRole',
-      type: 'role',
-      inputs: {
-        service: 'my.serverless.service'
-      },
-      outputs: {},
-      state: {},
-      dependencies: [],
-      fns: {
-        deploy: () => {},
-        remove: () => {}
-      }
-    },
-    'apiGateway:role': {
-      id: 'apiGatewayRole',
-      type: 'role',
-      inputs: {
-        service: 'my.api-gateway.service'
-      },
-      outputs: {},
-      state: {},
-      dependencies: [],
-      fns: {
-        deploy: () => {},
-        remove: () => {}
-      }
-    },
-    'apiGateway:func': {
-      id: 'apiGatewayFunc',
-      type: 'function',
-      inputs: {
-        memorySize: 512,
-        timeout: 60
-      },
-      outputs: {},
-      state: {},
-      dependencies: [],
-      fns: {
-        deploy: () => {},
-        remove: () => {},
-        invoke: () => {}
-      }
-    },
-    'func:role': {
-      id: 'funcRole',
-      type: 'role',
-      inputs: {
-        service: 'my.function.service'
-      },
-      outputs: {},
-      state: {},
-      dependencies: [],
-      fns: {
-        deploy: () => {},
-        remove: () => {}
-      }
+  let context
+  let Component
+
+  beforeEach(async () => {
+    context = await createTestContext()
+    Component = await context.import('Component')
+  })
+
+  it('build a simple graph from instance when none exists', () => {
+    const nextInstance = {
+      instanceId: 'test',
+      shouldDeploy: jest.fn(),
+      deploy: jest.fn(),
+      define: jest.fn(),
+      remove: jest.fn(),
+      construct: jest.fn()
     }
-  }
 
-  const orphanedComponents = {
-    orphanedRole: {
-      id: 'myOrphanedRole',
-      type: 'role',
-      inputs: {
-        service: 'my.old.serverless.service'
-      },
-      outputs: {},
-      state: {},
-      dependencies: [],
-      fns: {
-        deploy: () => {},
-        remove: () => {}
-      }
+    const graph = buildGraph(nextInstance, null)
+    expect(graph.nodes()).toEqual(expect.arrayContaining([nextInstance.instanceId]))
+    expect(graph.edges()).toEqual([])
+    expect(graph.node(nextInstance.instanceId)).toEqual({
+      instanceId: nextInstance.instanceId,
+      nextInstance,
+      prevInstance: null,
+      operation: undefined // NOTE BRN: This gets set later in the deployGraph phase
+    })
+  })
+
+  it('build a simple graph from instance when one ALREADY exists', () => {
+    const nextInstance = {
+      instanceId: 'test',
+      shouldDeploy: jest.fn(),
+      deploy: jest.fn(),
+      define: jest.fn(),
+      remove: jest.fn(),
+      construct: jest.fn()
     }
-  }
 
-  it('should return a correct graphlib Graph', async () => {
-    const command = 'deploy'
-    const graph = await buildGraph(componentsToUse, orphanedComponents, command)
+    const prevInstance = {
+      instanceId: 'test',
+      shouldDeploy: jest.fn(),
+      deploy: jest.fn(),
+      define: jest.fn(),
+      remove: jest.fn(),
+      construct: jest.fn()
+    }
 
-    const edges = graph.edges()
-    const nodes = graph.nodes()
-    const nodeValueResults = map((node) => {
-      const val = graph.node(node)
-      const { type, command } = val // eslint-disable-line no-shadow
-      return {
-        id: node,
-        type,
-        command
-      }
-    }, nodes)
-    const expectedNodeValueResult = [
-      { id: 'orphanedRole', type: 'orphan', command: 'remove' },
-      { id: 'apiGateway', type: 'main', command },
-      { id: 'func', type: 'main', command },
-      { id: 'role', type: 'main', command },
-      { id: 'apiGateway:role', type: 'main', command },
-      { id: 'apiGateway:func', type: 'main', command },
-      { id: 'func:role', type: 'main', command }
-    ]
-    expect(nodeValueResults).toEqual(expectedNodeValueResult)
+    const graph = buildGraph(nextInstance, prevInstance)
+    expect(graph.nodes()).toEqual(expect.arrayContaining([nextInstance.instanceId]))
+    expect(graph.edges()).toEqual([])
+    expect(graph.node(nextInstance.instanceId)).toEqual({
+      instanceId: nextInstance.instanceId,
+      nextInstance,
+      prevInstance,
+      operation: undefined // NOTE BRN: This gets set later in the deployGraph phase
+    })
+  })
 
-    const componentKeys = union(keys(orphanedComponents), keys(componentsToUse))
+  it('build a simple graph and not include instances removed from provider', () => {
+    const nextInstance = {
+      instanceId: 'test',
+      shouldDeploy: jest.fn(),
+      deploy: jest.fn(),
+      define: jest.fn(),
+      remove: jest.fn(),
+      construct: jest.fn()
+    }
 
-    expect(nodes).toEqual(componentKeys)
-    expect(edges).toContainEqual(
-      { v: 'func', w: 'role' },
-      {
-        v: 'apiGateway',
-        w: 'func'
-      },
-      { v: 'apiGateway', w: 'role' }
+    const prevInstance = {
+      instanceId: 'test',
+      shouldDeploy: jest.fn(),
+      status: 'removed',
+      deploy: jest.fn(),
+      define: jest.fn(),
+      remove: jest.fn(),
+      construct: jest.fn()
+    }
+
+    const graph = buildGraph(nextInstance, prevInstance)
+    expect(graph.nodes()).toEqual(expect.arrayContaining([nextInstance.instanceId]))
+    expect(graph.edges()).toEqual([])
+    expect(graph.node('test').prevInstance).toEqual(null)
+  })
+
+  it('build a simple graph and add provider state if available', () => {
+    const nextInstance = {
+      instanceId: 'test',
+      shouldDeploy: jest.fn(),
+      deploy: jest.fn(),
+      define: jest.fn(),
+      remove: jest.fn(),
+      construct: jest.fn()
+    }
+
+    nextInstance[SYMBOL_STATE] = { foo: 'bar' }
+
+    const prevInstance = {
+      instanceId: 'test',
+      shouldDeploy: jest.fn(),
+      status: 'removed',
+      deploy: jest.fn(),
+      define: jest.fn(),
+      remove: jest.fn(),
+      construct: jest.fn()
+    }
+
+    const graph = buildGraph(nextInstance, prevInstance)
+    expect(graph.nodes()).toEqual(expect.arrayContaining([nextInstance.instanceId]))
+    expect(graph.edges()).toEqual([])
+    expect(graph.node('test').prevInstance).toEqual({ foo: 'bar' })
+  })
+
+  it('build a simple graph when only instance has been removed', () => {
+    const prevInstance = {
+      instanceId: 'test',
+      shouldDeploy: jest.fn(),
+      deploy: jest.fn(),
+      define: jest.fn(),
+      remove: jest.fn(),
+      construct: jest.fn()
+    }
+
+    const graph = buildGraph(null, prevInstance)
+    expect(graph.nodes()).toEqual(expect.arrayContaining([prevInstance.instanceId]))
+    expect(graph.edges()).toEqual([])
+    expect(graph.node(prevInstance.instanceId)).toEqual({
+      instanceId: prevInstance.instanceId,
+      nextInstance: null,
+      prevInstance,
+      operation: 'remove'
+    })
+  })
+
+  it('build a simple graph for a single Component when none exists', async () => {
+    let nextInstance = context.construct(Component, {})
+    nextInstance = await context.defineComponent(nextInstance, null)
+
+    const graph = buildGraph(nextInstance, null)
+    expect(graph.nodes()).toEqual(expect.arrayContaining([nextInstance.instanceId]))
+    expect(graph.edges()).toEqual([])
+    expect(graph.node(nextInstance.instanceId)).toEqual({
+      instanceId: nextInstance.instanceId,
+      nextInstance,
+      prevInstance: null,
+      operation: undefined // NOTE BRN: This gets set later in the deployGraph phase
+    })
+  })
+
+  it('build a simple graph for a single Component when one ALREADY exists', async () => {
+    let component = context.construct(Component, {})
+    component = await context.defineComponent(component, null)
+    component = resolveComponentEvaluables(component)
+    await component.deploy(null, context)
+
+    const prevInstance = await deserialize(serialize(component, context), context)
+
+    let nextInstance = context.construct(Component, {})
+    nextInstance.hydrate(prevInstance)
+    nextInstance = await context.defineComponent(nextInstance, prevInstance)
+    nextInstance = resolveComponentEvaluables(nextInstance)
+
+    const graph = buildGraph(nextInstance, prevInstance)
+    expect(graph.nodes()).toEqual(expect.arrayContaining([nextInstance.instanceId]))
+    expect(graph.edges()).toEqual([])
+    expect(graph.node(nextInstance.instanceId)).toEqual({
+      instanceId: nextInstance.instanceId,
+      nextInstance,
+      prevInstance,
+      operation: undefined // NOTE BRN: This gets set later in the deployGraph phase
+    })
+  })
+
+  it('build a graph for a component with a child', async () => {
+    const nextInstance = context.construct(Component, {})
+    const fooComponent = context.construct(Component, {})
+    nextInstance.foo = fooComponent
+
+    const graph = buildGraph(nextInstance, null)
+    expect(graph.nodes()).toEqual(
+      expect.arrayContaining([nextInstance.instanceId, fooComponent.instanceId])
     )
+    expect(graph.edges()).toEqual(
+      expect.arrayContaining([{ v: nextInstance.instanceId, w: fooComponent.instanceId }])
+    )
+  })
+
+  it('build a graph for a component with a removed child and a new child', async () => {
+    let component = context.construct(Component, {
+      components: {
+        foo: context.construct(Component, {})
+      }
+    })
+    component = await context.defineComponent(component)
+    component = resolveComponentEvaluables(component)
+    await component.deploy(null, context)
+
+    const prevInstance = await deserialize(serialize(component, context), context)
+
+    let nextInstance = context.construct(Component, {
+      components: {
+        bar: context.construct(Component, {})
+      }
+    })
+    nextInstance.hydrate(prevInstance)
+    nextInstance = await context.defineComponent(nextInstance, prevInstance)
+    nextInstance = resolveComponentEvaluables(nextInstance)
+
+    const graph = buildGraph(nextInstance, prevInstance)
+    expect(graph.nodes()).toEqual(
+      expect.arrayContaining([
+        nextInstance.instanceId,
+        nextInstance.components.bar.instanceId,
+        prevInstance.components.foo.instanceId
+      ])
+    )
+    expect(graph.edges()).toEqual(
+      expect.arrayContaining([
+        {
+          v: nextInstance.instanceId,
+          w: nextInstance.components.bar.instanceId
+        },
+        {
+          v: nextInstance.instanceId,
+          w: prevInstance.components.foo.instanceId
+        }
+      ])
+    )
+    expect(graph.node(nextInstance.instanceId)).toEqual({
+      nextInstance,
+      prevInstance,
+      operation: undefined,
+      instanceId: nextInstance.instanceId
+    })
+
+    expect(graph.node(prevInstance.components.foo.instanceId)).toEqual({
+      nextInstance: null,
+      prevInstance: prevInstance.components.foo,
+      operation: 'remove',
+      instanceId: prevInstance.components.foo.instanceId
+    })
+
+    expect(graph.node(nextInstance.components.bar.instanceId)).toEqual({
+      nextInstance: nextInstance.components.bar,
+      prevInstance: null,
+      operation: undefined, // NOTE BRN: This gets set later during the deployGraph phase
+      instanceId: nextInstance.components.bar.instanceId
+    })
   })
 })

@@ -1,0 +1,16 @@
+name: AwsProvider
+extends: Provider
+version: 0.3.0
+main: ./dist/index.js
+
+credentials: ${inputs.credentials}
+region: ${inputs.region || 'us-east-1'}
+
+inputTypes:
+  credentials:
+    type: object
+    required: false
+  region:
+    type: string
+    required: false
+    default: us-east-1

@@ -1,0 +1,11 @@
+extends: ../Foo
+name: Bar
+main: ./index.js
+
+inputTypes:
+  bar:
+    type: string
+
+bar: ${inputs.bar}
+
+foo: hello override

@@ -1,0 +1,17 @@
+{
+  "name": "@serverless-components/aws-s3-website",
+  "version": "0.3.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Serverless, Inc.",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@serverless/utils": "0.0.19",
+    "klaw-sync": "^4.0.0",
+    "mime-types": "^2.1.21",
+    "folder-hash": "^2.1.2"
+  }
+}

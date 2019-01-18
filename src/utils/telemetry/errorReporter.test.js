@@ -1,13 +1,12 @@
-const utils = require('@serverless/utils')
-const errorReporter = require('./errorReporter')
+import utils from '@serverless/utils'
+import errorReporter from './errorReporter'
 
 jest.mock('@serverless/utils')
 
-afterAll(() => {
-  jest.restoreAllMocks()
-})
-
 describe('#errorReporter()', () => {
+  afterAll(() => {
+    jest.restoreAllMocks()
+  })
   it('should return a Sentry Raven object if config file can be found', async () => {
     utils.fileExists.mockImplementation(() => Promise.resolve(true))
     utils.readFile.mockImplementation(() =>

@@ -1,0 +1,30 @@
+name: AwsIamRole
+extends: Component
+main: ./dist/index.js
+version: 0.3.0
+
+provider: ${inputs.provider}
+roleName: ${inputs.roleName || 'role-${this.instanceId}'}
+service: ${inputs.service}
+policy: ${inputs.policy}
+
+inputTypes:
+  provider:
+    type: AwsProvider
+  roleName:
+    type: string
+    required: false
+    displayName: IAM role name
+    description: The name of the role to create
+    maxLength: 64
+  service:
+    type: string
+    required: true
+    displayName: Principle AWS service
+    description: The name of the AWS service to create role for
+    example: lambda.amazonaws.com
+  policy:
+    type: object
+    required: false
+    displayName: IAM Role Policy
+    description: A managed IAM policy or an inline policy document

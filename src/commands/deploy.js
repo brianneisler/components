@@ -1,7 +1,10 @@
-const run = require('../run')
+import { createContext } from '../utils'
+import run from '../run'
 
-async function deploy(options) {
-  return run('deploy', options)
+const deploy = async (options) => {
+  let context = await createContext(options)
+  context = await context.loadPlugins()
+  return run('deploy', context)
 }
 
-module.exports = deploy
+export default deploy

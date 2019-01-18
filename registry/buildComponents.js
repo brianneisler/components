@@ -3,11 +3,11 @@
 'use strict'
 
 const fs = require('fs')
-const join = require('path').join
+const { join } = require('path')
 const os = require('os')
 const cp = require('child_process')
 const BbPromise = require('bluebird')
-const contains = require('ramda').contains
+const { contains } = require('@serverless/utils')
 
 const rootPath = __dirname
 const dirsFilter = process.argv.slice(2)
@@ -26,7 +26,9 @@ function buildComponents(watch, concurrency) {
       const componentDirPath = join(rootPath, componentDir)
 
       return new BbPromise((resolve, reject) => {
-        if (!fs.existsSync(join(componentDirPath, 'package.json'))) return resolve()
+        if (!fs.existsSync(join(componentDirPath, 'package.json'))) {
+          return resolve()
+        }
 
         let babel = join(componentDirPath, '..', 'node_modules', '.bin')
         babel = os.platform().startsWith('win') ? join(babel, 'babel.cmd') : join(babel, 'babel')

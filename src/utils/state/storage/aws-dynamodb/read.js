@@ -1,10 +1,10 @@
-const AWS = require('aws-sdk')
-const { isNil } = require('ramda')
-const dynamo = new AWS.DynamoDB.DocumentClient({ region: 'us-east-1' })
+import { isNil } from '@serverless/utils'
+import AWS from 'aws-sdk'
 
-const { log } = require('../../../../utils/logging')
-const createLockAndFetch = async (config) => {
-  log('Checking if state is locked')
+const createLockAndFetch = async (config, context) => {
+  const dynamo = new AWS.DynamoDB.DocumentClient({ region: 'us-east-1' })
+
+  context.log('Checking if state is locked')
   let locked = false
   const { Item } = await dynamo
     .get({
@@ -39,7 +39,9 @@ const createLockAndFetch = async (config) => {
   return Item && Item.state ? Item.state : {}
 }
 
-module.exports = async (config) => {
-  const content = await createLockAndFetch(config)
+const read = async (config, context) => {
+  const content = await createLockAndFetch(config, context)
   return content
 }
+
+export default read

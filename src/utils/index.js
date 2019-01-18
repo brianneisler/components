@@ -1,19 +1,20 @@
-const components = require('./components')
-const dag = require('./dag')
-const logging = require('./logging')
-const misc = require('./misc')
-const registry = require('./registry')
-const state = require('./state')
-const telemetry = require('./telemetry')
-const variables = require('./variables')
-
-module.exports = {
-  ...components,
-  ...dag,
-  ...logging,
-  ...misc,
-  ...registry,
-  ...state,
-  ...telemetry,
-  ...variables
-}
+export * from './app'
+export * from './ast'
+export * from './cli'
+export * from './component'
+export * from './config'
+export * from './constants'
+export * from './context'
+export * from './dag'
+export * from './deployment'
+export * from './interpreter'
+export * from './logging'
+export * from './misc'
+export * from './plugin'
+export * from './project'
+export * from './registry'
+export * from './serialize'
+export * from './state'
+export * from './telemetry'
+export * from './type'
+export * from './variable'

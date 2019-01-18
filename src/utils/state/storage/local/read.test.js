@@ -1,6 +1,6 @@
-const { getTmpDir, writeFile } = require('@serverless/utils')
-const path = require('path')
-const readStateFile = require('./read')
+import { getTmpDir, writeFile } from '@serverless/utils'
+import path from 'path'
+import readStateFile from './read'
 
 describe('#readStateFile()', () => {
   let oldCwd
@@ -9,7 +9,7 @@ describe('#readStateFile()', () => {
   let projectPath
 
   const fileContent = {
-    $: { serviceId: 'AsH3gefdfDSY' },
+    $: { appId: 'AsH3gefdfDSY' },
     'myApp:myFunction': {
       type: 'aws-iam-function',
       internallyManaged: false,

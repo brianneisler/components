@@ -1,0 +1,9 @@
+name: FooClass
+main: ./index.js
+
+inputTypes:
+  foo:
+    type: string
+
+foo: ${inputs.foo}
+baz: 'abc'

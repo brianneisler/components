@@ -3,7 +3,7 @@
 'use strict'
 
 const fs = require('fs')
-const join = require('path').join
+const { join } = require('path')
 const os = require('os')
 const cp = require('child_process')
 const BbPromise = require('bluebird')
@@ -22,7 +22,9 @@ function installComponents() {
       const componentDirPath = join(rootPath, componentDir)
 
       return new BbPromise((resolve, reject) => {
-        if (!fs.existsSync(join(componentDirPath, 'package.json'))) return resolve()
+        if (!fs.existsSync(join(componentDirPath, 'package.json'))) {
+          return resolve()
+        }
 
         const command = cp.spawn(npmCmd, ['install'], { env: process.env, cwd: componentDirPath })
         command.stdout.on('data', (data) => {
@@ -39,6 +41,6 @@ function installComponents() {
 
 ;(() => {
   return BbPromise.resolve()
-    .then(() => buildComponents(false, concurrency))
     .then(installComponents)
+    .then(() => buildComponents(false, concurrency))
 })()

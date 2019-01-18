@@ -1,5 +1,5 @@
-const AWS = require('aws-sdk')
-const writeStateFile = require('./write')
+import AWS from 'aws-sdk'
+import writeStateFile from './write'
 
 jest.mock('../../../../utils/logging')
 
@@ -32,7 +32,7 @@ afterAll(() => {
 
 describe('#readStateFile()', () => {
   const fileContent = {
-    $: { serviceId: 'AsH3gefdfDSY' },
+    $: { appId: 'AsH3gefdfDSY' },
     'myApp:myFunction': {
       type: 'aws-iam-function',
       internallyManaged: false,

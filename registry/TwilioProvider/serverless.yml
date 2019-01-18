@@ -1,0 +1,18 @@
+name: TwilioProvider
+extends: Provider
+version: 0.3.0
+main: ./dist/index.js
+
+accountSid: ${inputs.accountSid}
+authToken: ${inputs.authToken}
+credentials:
+  accountSid: ${inputs.accountSid}
+  authToken: ${inputs.authToken}
+
+inputTypes:
+  accountSid:
+    type: string
+    required: true
+  authToken:
+    type: string
+    required: true
